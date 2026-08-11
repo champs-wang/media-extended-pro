@@ -128,7 +128,7 @@ export function useTextTracks() {
         id,
         default: isDefault,
       });
-      // out.setMode(isDefault ? "showing" : "disabled");
+      out.setMode(isDefault ? "showing" : "disabled");
       return out;
     });
     const remote = dedupeWebsiteTrack(remoteTracks, localTracks).map(
@@ -145,7 +145,7 @@ export function useTextTracks() {
           src: toWebpageUrl(wid),
           default: isDefault,
         });
-        // track.setMode(isDefault ? "showing" : "disabled");
+        track.setMode(isDefault ? "showing" : "disabled");
         track.customFetch = customFetch;
         return track;
       },
