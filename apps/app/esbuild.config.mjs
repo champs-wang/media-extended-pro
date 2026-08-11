@@ -68,7 +68,6 @@ const opts = {
     "obsidian",
     "electron",
     "@electron/remote",
-    "media-captions",
     ...CM_BULTIIN,
     ...NODE_BULTIIN,
   ],
