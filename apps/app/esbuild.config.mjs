@@ -2,7 +2,7 @@
 import obPlugin from "./scripts/ob.esbuild.mjs";
 import { build, context } from "esbuild";
 import stylePlugin from "esbuild-style-plugin";
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 import { resolve, basename } from "path";
 import { pathToFileURL } from "url";
 import semverPrerelease from "semver/functions/prerelease.js";
@@ -68,6 +68,7 @@ const opts = {
     "obsidian",
     "electron",
     "@electron/remote",
+    "media-captions",
     ...CM_BULTIIN,
     ...NODE_BULTIIN,
   ],
@@ -136,13 +137,19 @@ function inlineCodePlugin(extraConfig) {
       build.onResolve(
         { filter: codePrefixPattern },
         ({ path: workerPath, resolveDir }) => {
+          let resolved = resolve(
+            resolveDir,
+            workerPath.replace(codePrefixPattern, "")
+          );
+          // Ensure .ts extension for TypeScript files
+          if (!/\.[a-z]+$/i.test(resolved)) {
+            const tsPath = resolved + ".ts";
+            if (existsSync(tsPath)) {
+              resolved = tsPath;
+            }
+          }
           return {
-            path: pathToFileURL(
-              resolve(
-                resolveDir,
-                workerPath.replace(codePrefixPattern, "")
-              )
-            ).href,
+            path: resolved,
             namespace,
           };
         }
@@ -176,6 +183,7 @@ async function buildWorker(
     minify: true,
     format: "cjs",
     target: "es2022",
+    tsconfig: "tsconfig.json",
     ...extraConfig,
   });
 
