@@ -1,10 +1,10 @@
 import "@vidstack/react/player/styles/base.css";
 
-import type { MediaErrorDetail, MediaViewType } from "@vidstack/react";
+import type { MediaErrorDetail, MediaPlayerInstance, MediaViewType } from "@vidstack/react";
 import { MediaPlayer, useMediaState } from "@vidstack/react";
 
-import { Notice } from "obsidian";
-import { useState } from "react";
+import { Notice, Platform } from "obsidian";
+import { useRef, useState } from "react";
 import { useTempFragHandler } from "@/components/hook/use-temporal-frag";
 import { isFileMediaInfo } from "@/info/media-info";
 import { cn } from "@/lib/utils";
@@ -41,6 +41,8 @@ function PlayerLayout() {
 
 export function Player() {
   const setPlayer = useMediaViewStore((s) => s.setPlayer);
+  const playerRef = useRef<MediaPlayerInstance | null>(null);
+  const retryCountRef = useRef(0);
   const { onEnded } = useAutoContinuePlay();
   const source = useSource();
   const isWebm = useMediaViewStore(({ source }) => {
@@ -69,9 +71,17 @@ export function Player() {
       playsInline
       title={title}
       viewType={viewType}
-      ref={setPlayer}
+      ref={(inst) => {
+        playerRef.current = inst;
+        setPlayer(inst);
+      }}
       onEnded={onEnded}
-      onError={(e) => handleError(e, source.src)}
+      onError={(e) =>
+        handleError(e, source.src, {
+          player: playerRef.current,
+          retriedRef: retryCountRef,
+        })
+      }
       {...hashProps}
     >
       <MediaProviderEnhanced></MediaProviderEnhanced>
@@ -90,7 +100,32 @@ export function Player() {
   );
 }
 
-function handleError(e: MediaErrorDetail, source: URL | string) {
+function handleError(
+  e: MediaErrorDetail,
+  source: URL | string,
+  opts?: { player?: MediaPlayerInstance | null; retriedRef?: { current: number } },
+) {
+  // On mobile, the Capacitor local file server may not be ready when the
+  // player first tries to load a vault file (http://localhost/_capacitor_file_/...),
+  // which surfaces as MEDIA_ERR_NETWORK. Retry once after a short delay;
+  // the same URL reliably succeeds afterwards.
+  if (
+    Platform.isMobileApp &&
+    e.code === 2 &&
+    opts?.player &&
+    opts.retriedRef &&
+    opts.retriedRef.current < 1
+  ) {
+    opts.retriedRef.current += 1;
+    window.setTimeout(() => {
+      try {
+        opts.player?.startLoading();
+      } catch (loadError) {
+        console.error("Failed to retry media load", loadError);
+      }
+    }, 1500);
+    return;
+  }
   new Notice(
     createFragment((frag) => {
       frag.appendText(`Failed to load media for ${source}: `);

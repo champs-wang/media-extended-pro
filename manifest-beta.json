@@ -1,9 +1,9 @@
-{
+﻿{
   "id": "media-extended-pro",
   "name": "Media Extended Pro",
-  "version": "3.2.8",
+  "version": "3.2.9",
   "minAppVersion": "1.5.7",
-  "description": "Media(Video/Audio) Playback Enhancement for Obsidian.md — Mobile Edition",
+  "description": "Media(Video/Audio) Playback Enhancement for Obsidian.md 鈥?Mobile Edition",
   "author": "AidenLx (mobile port)",
   "authorUrl": "https://github.com/AidenLx/",
   "isDesktopOnly": false

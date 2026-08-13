@@ -56,6 +56,12 @@ export async function applyTempFrag({
   }
   if (_newTime !== null) {
     const newTime = _newTime;
+    // Wait for the media to be ready before seeking. On mobile, the local
+    // file server may take a moment to start serving, so currentTime writes
+    // before can-play are silently dropped.
+    if (!player.state.canPlay) {
+      await waitFor(player, "can-play");
+    }
     player.currentTime = newTime;
     // trying to fix youtube iframe autoplay on initial seek
     if (

@@ -31,6 +31,11 @@ export function handleCueUpdate(
     player.subscribe(({ textTrack }) => {
       if (!textTrack) return;
       const onCueChange = () => {
+        // Do not emit cue changes while the media is not ready. On mobile the
+        // local file server may start late; during the failed/loading state
+        // activeCues can incorrectly report every cue, which makes third-party
+        // integrations (e.g. VoiceGenie) play all segments at once.
+        if (!player.state.canPlay) return;
         const source = store.getState().source?.url;
         if (!source) return;
         workspace.trigger(
@@ -40,7 +45,6 @@ export function handleCueUpdate(
           textTrack.activeCues.map((c) => c.id),
         );
       };
-      onCueChange();
       textTrack.addEventListener("cue-change", onCueChange);
       return () => {
         textTrack.removeEventListener("cue-change", onCueChange);
