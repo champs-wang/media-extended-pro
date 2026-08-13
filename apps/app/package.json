@@ -1,6 +1,6 @@
 {
   "name": "media-extended-pro",
-  "version": "3.2.7",
+  "version": "3.2.8",
   "scripts": {
     "dev": "cross-env BUILD=development node esbuild.config.mjs",
     "build": "tsc --build && cross-env BUILD=production node esbuild.config.mjs",
